@@ -1,0 +1,43 @@
+services:
+
+  searxng:
+    image: docker.io/searxng/searxng:${SEARXNG_VERSION:-latest}
+    env_file: environment.d/searxng.env
+    environment:
+      SEARXNG_VALKEY_URL: valkey://cache:6379/0
+    ports:
+      - ${SEARXNG_PORT:-8080}:8080
+    volumes:
+      - ${SEARXNG_CONFIG_VOLUME:-./config/}:/etc/searxng/:Z
+      - ${SEARXNG_DATA_VOLUME:-searxng-data}:/var/cache/searxng/
+      - /etc/localtime:/etc/localtime:ro
+    depends_on: [cache]
+    restart: unless-stopped
+
+  cache:
+    image: valkey/valkey:${VALKEY_VERSION:-9}
+    env_file: environment.d/valkey.env
+    volumes:
+      - ${VALKEY_DATA_VOLUME:-valkey-data}:/data
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+      com.centurylinklabs.watchtower.scope: ${COMPOSE_PROJECT_NAME}
+    healthcheck:
+      test: redis-cli ping || exit 1
+    restart: unless-stopped
+
+  watchtower:
+    image: nickfedor/watchtower:${WATCHTOWER_VERSION:-latest}
+    env_file: environment.d/watchtower.env
+    environment:
+      WATCHTOWER_SCOPE: ${COMPOSE_PROJECT_NAME}
+    volumes:
+      - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+      com.centurylinklabs.watchtower.scope: ${COMPOSE_PROJECT_NAME}
+    restart: unless-stopped
+
+volumes:
+  searxng-data: {}
+  valkey-data: {}
