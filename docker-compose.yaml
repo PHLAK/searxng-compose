@@ -2,6 +2,7 @@ services:
 
   searxng:
     image: docker.io/searxng/searxng:${SEARXNG_VERSION:-latest}
+    user: ${HOST_USER_ID:-0}:${HOST_GROUP_ID:-0}
     env_file: environment.d/searxng.env
     environment:
       SEARXNG_VALKEY_URL: valkey://cache:6379/0
@@ -16,6 +17,7 @@ services:
 
   cache:
     image: valkey/valkey:${VALKEY_VERSION:-9}
+    user: ${HOST_USER_ID:-0}:${HOST_GROUP_ID:-0}
     env_file: environment.d/valkey.env
     volumes:
       - ${VALKEY_DATA_VOLUME:-valkey-data}:/data
